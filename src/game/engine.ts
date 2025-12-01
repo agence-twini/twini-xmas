@@ -150,7 +150,7 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
 
   function loadLeaderboard(): void {
     try {
-      const raw = localStorage.getItem('santaLeaderboard')
+      const raw = localStorage.getItem('twini-xmas-leaderboard')
 
       if (!raw) return
 
@@ -165,7 +165,7 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
 
   function saveLeaderboard(): void {
     try {
-      localStorage.setItem('santaLeaderboard', JSON.stringify(state.leaderboard))
+      localStorage.setItem('twini-xmas-leaderboard', JSON.stringify(state.leaderboard))
     } catch {}
   }
 
