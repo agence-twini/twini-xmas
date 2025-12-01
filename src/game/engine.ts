@@ -103,12 +103,12 @@ const BOOT_DURATION_FRAMES = 720
 
 export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameCallbacks = {}) {
   const agencySecrets = [
-    'Secret 1...',
-    'Secret 2...',
-    'Secret 3...',
-    'Secret 4...',
-    'Secret 5...',
-    'Secret 6...',
+    "Tous les ans, fin décembre, la neige tombe sur tous les sites que l'agence a créés ❄️ C'est la twini touch !",
+    "À l'origine, twini devait avoir une mascotte en forme de pieuvre. Le moodboard était sérieux. Le résultat beaucoup moins 🐙",
+    "Au début, l'agence devait s'appeler Smile. Puis on a trouvé twini : 'twin' pour Ju & Mo (Julien & Morgane) et le 'i' pour l'intention. Résultat : plus de sens, moins de dentifrice 😏",
+    'Avant twini, Morgane a travaillée sur des projets pour des groupes internationaux comme Marionnaud Paris et Procter & Gamble (Ariel, Pampers, Gillette...). Puis elle est revenue faire de la magie ici ✨',
+    'Morgane et Julien forment un duo pro... mais aussi un couple depuis plus de 20 ans. Oui, vraiment 💛',
+    "Officiellement notre chat s'appel Pistache. Officieusement, à cause de Julien, son nom est devenu 'Kekette'... et c'est à ça qu'il répond 😅",
   ]
 
   const state: GameState = {
@@ -614,7 +614,7 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
         ctx.fillStyle = '#fde68a'
         ctx.font = 'bold 42px "Fusion Pixel 12px Monospaced SC"'
         ctx.textAlign = 'center'
-        ctx.fillText('Twini Xmas', LOGIC_WIDTH / 2, LOGIC_HEIGHT / 2 - 12)
+        ctx.fillText('twini Xmas', LOGIC_WIDTH / 2, LOGIC_HEIGHT / 2 - 12)
 
         ctx.restore()
       }

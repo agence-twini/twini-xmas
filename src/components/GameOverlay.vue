@@ -83,7 +83,7 @@ defineEmits<{
 
       <div
         v-if="secrets.length"
-        class="p-4 space-y-6 border border-emerald-500/30 bg-emerald-900/20 rounded-xl"
+        class="max-h-[400px] p-4 space-y-6 border border-emerald-500/30 bg-emerald-900/20 rounded-xl overflow-y-auto"
       >
         <h3
           class="text-sm font-semibold tracking-wide uppercase text-emerald-200 flex items-center gap-2"
