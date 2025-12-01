@@ -11,6 +11,7 @@
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
     "build-only": "vite build",
+    "serve:node": "node server.js",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix --cache",
     "format": "prettier --write --experimental-cli src/"
@@ -18,6 +19,7 @@
   "dependencies": {
     "@fontsource/fusion-pixel-12px-monospaced-sc": "^5.2.5",
     "@tailwindcss/vite": "^4.1.17",
+    "express": "^5.2.1",
     "tailwindcss": "^4.1.17",
     "vue": "^3.5.25"
   },
