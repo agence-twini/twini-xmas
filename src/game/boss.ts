@@ -1,5 +1,5 @@
-import { LOGIC_WIDTH } from './constants.ts'
-import { rectsOverlap } from './utils.ts'
+import { LOGIC_WIDTH } from './constants'
+import { rectsOverlap } from './utils'
 
 export interface Boss {
   active: boolean

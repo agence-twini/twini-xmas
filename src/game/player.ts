@@ -1,12 +1,5 @@
-import {
-  GRAVITY,
-  MOVE_SPEED,
-  JUMP_FORCE,
-  LOGIC_WIDTH,
-  LOGIC_HEIGHT,
-  PLATFORMS,
-} from './constants.ts'
-import { rectsOverlap } from './utils.ts'
+import { GRAVITY, MOVE_SPEED, JUMP_FORCE, LOGIC_WIDTH, LOGIC_HEIGHT, PLATFORMS } from './constants'
+import { rectsOverlap } from './utils'
 
 export interface Player {
   x: number
@@ -86,7 +79,6 @@ export function handlePlayerInput(player: Player, keys: Keys, touch: Touch): voi
 export function updatePlayer(player: Player, dt: number, gameState: GameState): void {
   const canvasWidth = LOGIC_WIDTH
   const canvasHeight = LOGIC_HEIGHT
-
   const prevY = player.y
 
   player.vy += GRAVITY * dt

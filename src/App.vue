@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, type Ref, type ComputedRef } from 'vue'
+import { ref, onMounted, onUnmounted, type Ref } from 'vue'
 import GameHUD from '@/components/GameHUD.vue'
 import TouchControls from '@/components/TouchControls.vue'
 import GameOverlay from '@/components/GameOverlay.vue'
-import { LOGIC_WIDTH, LOGIC_HEIGHT } from './game/constants.ts'
-import { createGameEngine } from './game/engine.ts'
+import { LOGIC_WIDTH, LOGIC_HEIGHT } from './game/constants'
+import { createGameEngine } from './game/engine'
 
-type Anecdote = string
+type Secret = string
 
 interface LeaderboardEntry {
   score: number
@@ -26,8 +26,8 @@ interface GameEngine {
     audio: {
       muted: boolean
     }
-    anecdotesUnlocked: number
-    agencyAnecdotes?: Anecdote[]
+    secretsUnlocked: number
+    agencySecrets?: Secret[]
     firstBoot: boolean
   }
   startGame: () => void
@@ -59,16 +59,10 @@ const bossDefeated: Ref<boolean> = ref(false)
 const isMobile: Ref<boolean> = ref(false)
 const muted: Ref<boolean> = ref(false)
 
-const unlockedAnecdotes: Ref<Anecdote[]> = ref([])
+const unlockedSecrets: Ref<Secret[]> = ref([])
 const leaderboard: Ref<LeaderboardEntry[]> = ref([])
-const shareCopied: Ref<boolean> = ref(false)
 
 const engineRef: Ref<GameEngine | null> = ref(null)
-
-const shareText: ComputedRef<string> = computed(
-  () =>
-    `J'ai fait ${score.value} cadeaux sur Santa Arcade (best ${bestScore.value}) et affronté Krampus. Qui fait mieux ?`,
-)
 
 function resizeCanvas(): void {
   if (!frame.value || !canvas.value || !ctxRef.value) return
@@ -88,6 +82,7 @@ function resizeCanvas(): void {
 
 function syncFromEngine(): void {
   const engine = engineRef.value
+
   if (!engine) return
 
   const s = engine.state
@@ -102,21 +97,21 @@ function syncFromEngine(): void {
   leaderboard.value = s.leaderboard
   muted.value = s.audio.muted
 
-  const anecdotes: Anecdote[] = []
+  const secrets: Secret[] = []
 
-  for (let i = 0; i < s.anecdotesUnlocked; i++) {
-    const source = s.agencyAnecdotes
+  for (let i = 0; i < s.secretsUnlocked; i++) {
+    const source = s.agencySecrets
 
     if (!source) continue
 
     const value = source[i]
 
     if (typeof value === 'string') {
-      anecdotes.push(value)
+      secrets.push(value)
     }
   }
 
-  unlockedAnecdotes.value = anecdotes
+  unlockedSecrets.value = secrets
 }
 
 function startGame(): void {
@@ -137,19 +132,6 @@ function setDuration(val: number): void {
 
   if (engine) {
     engine.state.selectedDuration = val
-  }
-}
-
-async function copyShare(): Promise<void> {
-  shareCopied.value = false
-
-  try {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      await navigator.clipboard.writeText(shareText.value)
-      shareCopied.value = true
-    }
-  } catch {
-    shareCopied.value = false
   }
 }
 
@@ -245,10 +227,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="game-shell">
-    <div class="game-frame" ref="frame">
-      <div class="canvas-wrapper">
-        <canvas ref="canvas"></canvas>
+  <div
+    class="flex items-center justify-center min-h-screen p-4 bg-[radial-gradient(circle_at_top,_var(--background)_0,_#020617_45%,_#022c22_80%,_#022c22_100%)] text-foreground"
+  >
+    <div
+      ref="frame"
+      class="relative w-full max-w-[580px] max-h-[900px] aspect-[580_/_900] bg-black rounded-3xl shadow-[0_20px_50px_rgba(2,_44,_34,_0.7)] overflow-hidden touch-none"
+    >
+      <div class="w-full h-full">
+        <canvas ref="canvas" class="block w-full h-full"></canvas>
       </div>
 
       <GameHUD
@@ -269,60 +256,17 @@ onUnmounted(() => {
       :bestScore="bestScore"
       :bossDefeated="bossDefeated"
       :selectedDuration="selectedDuration"
-      :anecdotes="unlockedAnecdotes"
+      :secrets="unlockedSecrets"
       :leaderboard="leaderboard"
-      :shareText="shareText"
-      :shareCopied="shareCopied"
       :won="won"
       @start="startGame"
       @set-duration="setDuration"
-      @copy-share="copyShare"
     />
   </div>
 </template>
 
 <style scoped>
-.game-shell {
-  min-height: 100vh;
-  background: radial-gradient(circle at top, #0f172a 0, #020617 60%, #000 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  color: #f9fafb;
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    'SF Pro Text',
-    'Segoe UI',
-    sans-serif;
-}
-
-.game-frame {
-  position: relative;
-  width: 100%;
-  max-width: 580px;
-  max-height: 900px;
-  aspect-ratio: 580 / 900;
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.9),
-    0 0 0 2px rgba(15, 23, 42, 0.9);
-  border-radius: 18px;
-  overflow: hidden;
-  background: black;
-  touch-action: none;
-}
-
-.canvas-wrapper {
-  width: 100%;
-  height: 100%;
-}
-
 canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
   image-rendering: pixelated;
 }
 </style>

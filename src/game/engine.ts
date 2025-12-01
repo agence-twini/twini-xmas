@@ -76,8 +76,10 @@ interface GameState {
   }
   firstBoot: boolean
   bootTimer: number
-  anecdotesUnlocked: number
-  agencyAnecdotes: string[]
+  bootSleighX: number
+  bootFadeOut: number
+  secretsUnlocked: number
+  agencySecrets: string[]
   leaderboard: LeaderboardEntry[]
   audio: AudioState
 }
@@ -97,16 +99,16 @@ interface TouchState {
   jump: boolean
 }
 
-const BOOT_DURATION_FRAMES = 260
+const BOOT_DURATION_FRAMES = 720
 
 export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameCallbacks = {}) {
-  const agencyAnecdotes = [
-    'Anecdote 1...',
-    'Anecdote 2...',
-    'Anecdote 3...',
-    'Anecdote 4...',
-    'Anecdote 5...',
-    'Anecdote 6...',
+  const agencySecrets = [
+    'Secret 1...',
+    'Secret 2...',
+    'Secret 3...',
+    'Secret 4...',
+    'Secret 5...',
+    'Secret 6...',
   ]
 
   const state: GameState = {
@@ -129,8 +131,10 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
     flags: { dead: false },
     firstBoot: true,
     bootTimer: 0,
-    anecdotesUnlocked: 0,
-    agencyAnecdotes,
+    bootSleighX: -120,
+    bootFadeOut: 0,
+    secretsUnlocked: 0,
+    agencySecrets,
     leaderboard: [],
     audio: createAudioState(),
   }
@@ -147,9 +151,11 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
   function loadLeaderboard(): void {
     try {
       const raw = localStorage.getItem('santaLeaderboard')
+
       if (!raw) return
 
       const parsed = JSON.parse(raw)
+
       if (Array.isArray(parsed)) {
         state.leaderboard = parsed
         state.bestScore = parsed.length ? parsed[0].score : 0
@@ -165,9 +171,10 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
 
   function updateLeaderboard(): void {
     const entry: LeaderboardEntry = { score: state.score, ts: Date.now() }
-    state.leaderboard.push(entry)
 
+    state.leaderboard.push(entry)
     state.leaderboard.sort((a, b) => b.score - a.score || a.ts - b.ts)
+
     if (state.leaderboard.length > 5) {
       state.leaderboard = state.leaderboard.slice(0, 5)
     }
@@ -175,19 +182,22 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
     saveLeaderboard()
   }
 
-  function computeAnecdotes(): void {
+  function computeSecrets(): void {
     const thresholds = [10, 20, 30, 40, 50, 60]
     let count = 0
+
     thresholds.forEach((t) => {
       if (state.score >= t) count++
     })
-    state.anecdotesUnlocked = count
+
+    state.secretsUnlocked = count
   }
 
   function clearIntervals(): void {
     if (timerInterval) clearInterval(timerInterval)
     if (giftInterval) clearInterval(giftInterval)
     if (gremlinInterval) clearInterval(gremlinInterval)
+
     timerInterval = giftInterval = gremlinInterval = null
   }
 
@@ -203,11 +213,12 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
   }
 
   function startGame(): void {
+    state.bootFadeOut = 0
     state.score = 0
     state.timeLeft = state.selectedDuration
     state.won = false
     state.bossDefeated = false
-    state.anecdotesUnlocked = 0
+    state.secretsUnlocked = 0
 
     resetPlayer(state.player)
     resetEntities()
@@ -238,7 +249,7 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
     state.state = 'end'
     state.bestScore = Math.max(state.bestScore, state.score)
 
-    computeAnecdotes()
+    computeSecrets()
     updateLeaderboard()
     clearIntervals()
 
@@ -247,7 +258,6 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
 
     stopMusicLoop(state.audio)
     state.cameraShake = 0
-
     callbacks.onEnd?.(state)
   }
 
@@ -280,11 +290,19 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
     }
 
     if (state.state === 'boot') {
+      state.bootSleighX += 6 * dt
       state.bootTimer--
+
       if (state.bootTimer <= 0) {
-        state.firstBoot = false
-        state.state = 'intro'
+        state.bootFadeOut += 0.04
+
+        if (state.bootFadeOut >= 1) {
+          state.bootFadeOut = 1
+          state.firstBoot = false
+          state.state = 'intro'
+        }
       }
+
       return
     }
 
@@ -308,8 +326,10 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
           '+1',
           30,
         )
+
         return false
       }
+
       return g.y < LOGIC_HEIGHT + 40
     })
 
@@ -337,20 +357,20 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
       state.player,
       state,
       (boss) => {
-        // 🔥 IMPACT VISUEL
+        // Visual impact
         state.cameraShake = 10
         state.slowMotionTimer = 12
 
-        // 🔊 REBOND DU JOUEUR
+        // Player's rebounce
         state.player.vy = -18
 
-        // ✨ PARTICULES D'IMPACT
+        // Impact particles
         spawnParticles(state.particles, boss.x + boss.w / 2, boss.y, '#f97316', 20)
 
-        // ✅ DÉGÂTS BOSS
+        // Boss damage
         boss.hp -= 1
 
-        // ✅ SCORE PAR HIT
+        // Score per hit
         state.score += 5
 
         addScorePop(
@@ -361,7 +381,7 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
           40,
         )
 
-        // 💀 BOSS VAINCU
+        // Boss defeated
         if (boss.hp <= 0) {
           boss.active = false
           state.bossDefeated = true
@@ -385,9 +405,9 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
   function drawBackground(): void {
     const w = LOGIC_WIDTH
     const h = LOGIC_HEIGHT
-
-    // 🌌 CIEL DÉGRADÉ NOËL
+    // Sky
     const grad = ctx.createLinearGradient(0, 0, 0, h)
+
     grad.addColorStop(0, '#020617')
     grad.addColorStop(0.5, '#0f172a')
     grad.addColorStop(1, '#020617')
@@ -395,7 +415,7 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, w, h)
 
-    // 🌙 LUNE
+    // Moon
     const moonX = LOGIC_WIDTH - 110
     const moonY = 70
     const moonR = 26
@@ -410,18 +430,22 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
     ctx.arc(moonX - 6, moonY + 4, moonR - 2, 0, Math.PI * 2)
     ctx.fill()
 
-    // ★ ÉTOILES
+    // Stars
     ctx.fillStyle = '#f8fafc'
+
     for (let i = 0; i < 70; i++) {
       const x = (i * 37 + 13) % w
       const y = (i * 53 + 21) % 220
+
       ctx.fillRect(x, y, 2, 2)
     }
 
-    // 🏔️ MONTAGNES SOMBRE
+    // Mountains
     ctx.fillStyle = '#020617'
+
     for (let x = 0; x < w; x += 60) {
       const height = 160 + (x % 120)
+
       ctx.beginPath()
       ctx.moveTo(x + 30, h - 300 - height)
       ctx.lineTo(x, h - 300)
@@ -431,8 +455,10 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
     }
 
     ctx.fillStyle = '#030712'
+
     for (let x = 0; x < w; x += 46) {
       const height = 120 + (x % 90)
+
       ctx.beginPath()
       ctx.moveTo(x + 23, h - 250 - height)
       ctx.lineTo(x + 6, h - 250)
@@ -441,14 +467,15 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
       ctx.fill()
     }
 
-    // ❄️ SOL NEIGE
+    // Ground
     ctx.fillStyle = '#e5e7eb'
     ctx.fillRect(0, h - 90, w, 90)
-
     ctx.fillStyle = 'rgba(148,163,184,0.4)'
+
     for (let i = 0; i < 120; i++) {
       const xx = (i * 19) % w
       const yy = h - 90 + ((i * 7) % 90)
+
       ctx.fillRect(xx, yy, 2, 1)
     }
   }
@@ -459,7 +486,7 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
     for (const p of PLATFORMS) {
       ctx.fillRect(p.x, p.y, p.w, p.h)
 
-      // Liseré givré
+      // Frosted border
       ctx.fillStyle = '#dbeafe'
       ctx.fillRect(p.x, p.y, p.w, 3)
 
@@ -479,13 +506,13 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
       )
     }
 
-    // ✅ BACKGROUND
+    // Background
     drawBackground()
 
-    // ✅ PLATEFORMES
+    // Platforms
     drawPlatforms()
 
-    // ✅ CADEAUX
+    // Gifts
     state.gifts.forEach((g) => {
       const x = Math.floor(g.x)
       const y = Math.floor(g.y)
@@ -497,7 +524,7 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
       ctx.fillRect(x, y + g.h / 2 - 2, g.w, 4)
     })
 
-    // ✅ GREMLINS
+    // Gremlins
     state.gremlins.forEach((en) => {
       const x = Math.floor(en.x)
       const y = Math.floor(en.y)
@@ -523,46 +550,109 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
       ctx.fillRect(x + 6, y + 20, w - 12, 3)
     })
 
-    // ✅ BOSS
+    // Boss
     drawBoss(ctx, state.boss)
 
-    // ✅ PLAYER
+    // ✅Player
     drawPlayer(ctx, state.player)
 
-    // ✅ PARTICULES
+    // Particules
     drawParticles(ctx, state.particles)
     drawScorePops(ctx, state.particles)
 
-    // ✅ NEIGE
+    // Snow
     drawSnow(ctx, state.snow)
 
-    // ✅ BOOT ANIMATION
+    // Improved cinematic boot
     if (state.state === 'boot') {
-      const t = 1 - state.bootTimer / BOOT_DURATION_FRAMES
+      const progress = 1 - state.bootTimer / BOOT_DURATION_FRAMES
 
-      ctx.fillStyle = `rgba(2,6,23,${0.9 - t * 0.6})`
+      // Background
+      const pulse = 0.04 + Math.sin(progress * Math.PI * 2) * 0.015
+      ctx.fillStyle = `rgba(2,6,23,${0.92 - pulse})`
       ctx.fillRect(0, 0, LOGIC_WIDTH, LOGIC_HEIGHT)
 
-      ctx.save()
-      ctx.translate(LOGIC_WIDTH / 2, LOGIC_HEIGHT / 2)
-      ctx.scale(1 + t * 0.6, 1 + t * 0.6)
-      ctx.translate(-LOGIC_WIDTH / 2, -LOGIC_HEIGHT / 2)
+      // Snow
+      for (let i = 0; i < 160; i++) {
+        const speed = 0.3 + (i % 3) * 0.6
+        const x = (i * 37 + progress * 900 * speed) % LOGIC_WIDTH
+        const y = (i * 53 + progress * 600 * speed) % LOGIC_HEIGHT
+
+        ctx.fillStyle =
+          i % 3 === 0
+            ? 'rgba(248,250,252,0.18)'
+            : i % 3 === 1
+              ? 'rgba(248,250,252,0.28)'
+              : 'rgba(248,250,252,0.38)'
+
+        ctx.fillRect(x, y, 2, 1)
+      }
+
+      // Sled
+      const sleighY = 100 + Math.sin(progress * 4) * 6
+
+      ctx.fillStyle = '#f87171'
+      ctx.fillRect(state.bootSleighX, sleighY, 46, 12)
 
       ctx.fillStyle = '#fde68a'
-      ctx.font = 'bold 32px monospace'
-      ctx.textAlign = 'center'
-      ctx.fillText('twini Xmas', LOGIC_WIDTH / 2, LOGIC_HEIGHT / 2 - 20)
+      ctx.fillRect(state.bootSleighX + 6, sleighY - 8, 18, 8)
 
-      ctx.fillStyle = '#f472b6'
-      ctx.font = 'bold 16px monospace'
-      ctx.fillText("Let's go!!!", LOGIC_WIDTH / 2, LOGIC_HEIGHT / 2 + 14)
+      // Reins
+      ctx.fillStyle = '#a16207'
+      ctx.fillRect(state.bootSleighX + 50, sleighY + 2, 10, 4)
+      ctx.fillRect(state.bootSleighX + 62, sleighY, 8, 3)
 
-      ctx.restore()
+      // Title
+      if (progress > 0.25) {
+        const textAlpha = Math.min(1, (progress - 0.25) / 0.3)
+
+        ctx.save()
+        ctx.globalAlpha = textAlpha
+        ctx.shadowColor = 'rgba(250,204,21,0.8)'
+        ctx.shadowBlur = 18
+
+        ctx.fillStyle = '#fde68a'
+        ctx.font = 'bold 42px "Fusion Pixel 12px Monospaced SC"'
+        ctx.textAlign = 'center'
+        ctx.fillText('Twini Xmas', LOGIC_WIDTH / 2, LOGIC_HEIGHT / 2 - 12)
+
+        ctx.restore()
+      }
+
+      // Tagline
+      if (progress > 0.55) {
+        const subAlpha = Math.min(1, (progress - 0.55) / 0.25)
+        const offset = (1 - subAlpha) * 12
+
+        ctx.save()
+        ctx.globalAlpha = subAlpha
+
+        ctx.fillStyle = '#f472b6'
+        ctx.font = 'bold 18px "Fusion Pixel 12px Monospaced SC"'
+        ctx.textAlign = 'center'
+        ctx.fillText("Les secrets de l'agence...", LOGIC_WIDTH / 2, LOGIC_HEIGHT / 2 + 26 + offset)
+
+        ctx.restore()
+      }
+
+      // Exit
+      if (progress > 0.9) {
+        const fadeOut = (progress - 0.9) / 0.1
+
+        ctx.fillStyle = `rgba(0,0,0,${fadeOut})`
+        ctx.fillRect(0, 0, LOGIC_WIDTH, LOGIC_HEIGHT)
+      }
     }
 
     ctx.restore()
 
-    // ✅ OVERLAY DE FIN
+    // Exit fade
+    if (state.bootFadeOut > 0) {
+      ctx.fillStyle = `rgba(0,0,0,${state.bootFadeOut})`
+      ctx.fillRect(0, 0, LOGIC_WIDTH, LOGIC_HEIGHT)
+    }
+
+    // Ending overlay
     if (state.state === 'end') {
       ctx.fillStyle = 'rgba(0,0,0,0.35)'
       ctx.fillRect(0, 0, LOGIC_WIDTH, LOGIC_HEIGHT)
@@ -576,9 +666,12 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
 
   function loop(timestamp: number): void {
     const dt = (timestamp - lastTime) / 16.67 || 1
+
     lastTime = timestamp
+
     update(dt)
     render()
+
     rafId = requestAnimationFrame(loop)
   }
 
@@ -589,6 +682,7 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
 
   function stopLoop(): void {
     if (rafId) cancelAnimationFrame(rafId)
+
     rafId = null
   }
 
@@ -611,6 +705,8 @@ export function createGameEngine(ctx: CanvasRenderingContext2D, callbacks: GameC
 
   function boot(): void {
     loadLeaderboard()
+
+    state.bootFadeOut = 0
 
     if (state.firstBoot) {
       state.state = 'boot'

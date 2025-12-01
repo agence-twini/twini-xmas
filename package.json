@@ -16,6 +16,9 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@fontsource/fusion-pixel-12px-monospaced-sc": "^5.2.5",
+    "@tailwindcss/vite": "^4.1.17",
+    "tailwindcss": "^4.1.17",
     "vue": "^3.5.25"
   },
   "devDependencies": {

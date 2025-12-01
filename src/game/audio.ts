@@ -30,6 +30,7 @@ export function toggleMute(audioState: AudioState): void {
   audioState.muted = !audioState.muted
 
   const ctx = audioState.audioCtx
+
   if (!ctx) return
 
   if (audioState.muted && ctx.state === 'running') {
@@ -53,10 +54,8 @@ function playTone(
   osc.type = type
   osc.frequency.setValueAtTime(freq, now)
   gain.gain.setValueAtTime(volume, now)
-
   osc.connect(gain)
   gain.connect(audioCtx.destination)
-
   osc.start(now)
   osc.stop(now + duration)
   gain.gain.exponentialRampToValueAtTime(0.0001, now + duration)
@@ -78,20 +77,16 @@ export function playDeathSweep(audioState: AudioState): void {
 
   const ctx = audioState.audioCtx
   const now = ctx.currentTime
-
   const osc = ctx.createOscillator()
   const gain = ctx.createGain()
 
   osc.type = 'sawtooth'
   osc.frequency.setValueAtTime(420, now)
   osc.frequency.exponentialRampToValueAtTime(40, now + 0.6)
-
   gain.gain.setValueAtTime(0.15, now)
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6)
-
   osc.connect(gain)
   gain.connect(ctx.destination)
-
   osc.start(now)
   osc.stop(now + 0.6)
 }
@@ -103,7 +98,6 @@ export function playVictoryJingle(audioState: AudioState): void {
 
   const ctx = audioState.audioCtx
   const now = ctx.currentTime
-
   const notes = [523, 659, 784, 1046]
 
   notes.forEach((freq, i) => {
@@ -112,13 +106,10 @@ export function playVictoryJingle(audioState: AudioState): void {
 
     osc.type = 'triangle'
     osc.frequency.setValueAtTime(freq, now + i * 0.12)
-
     gain.gain.setValueAtTime(0.12, now + i * 0.12)
     gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.12 + 0.2)
-
     osc.connect(gain)
     gain.connect(ctx.destination)
-
     osc.start(now + i * 0.12)
     osc.stop(now + i * 0.12 + 0.25)
   })
@@ -137,11 +128,9 @@ export function startMusicLoop(audioState: AudioState, gameState: GameState): vo
   if (!audioState.audioCtx) return
 
   const ctx = audioState.audioCtx
-
   const leadBase = [440, 523, 659, 523, 587, 523, 440, 523]
   const leadPanic = [659, 698, 784, 880]
   const leadBoss = [392, 392, 523, 392, 330, 392]
-
   const bassBase = [110, 110, 130, 98]
   const bassBoss = [98, 82, 98, 130]
 
@@ -153,7 +142,6 @@ export function startMusicLoop(audioState: AudioState, gameState: GameState): vo
     if (ctx.state === 'suspended') ctx.resume()
 
     const step = audioState.step++
-
     let lead = leadBase
     let bass = bassBase
     let leadVol = 0.06
@@ -171,11 +159,13 @@ export function startMusicLoop(audioState: AudioState, gameState: GameState): vo
 
     const leadIndex = step % lead.length
     const leadFreq = lead[leadIndex] !== undefined ? lead[leadIndex] : 440
+
     playTone(ctx, leadFreq, 0.12, leadVol, 'square')
 
     if (step % 2 === 0) {
       const bassIndex = step % bass.length
       const bassFreq = bass[bassIndex] !== undefined ? bass[bassIndex] : 110
+
       playTone(ctx, bassFreq, 0.18, 0.08, 'sawtooth')
     }
 

@@ -16,10 +16,14 @@ defineEmits<{
 </script>
 
 <template>
-  <div v-if="show" class="touch-controls">
+  <div
+    v-if="show"
+    class="controls absolute bottom-4 left-1/2 -translate-x-1/2 z-6 grid grid-cols-3 gap-4 w-[min(100%,_280px)] pointer-events-auto"
+  >
     <button
       @touchstart.prevent="$emit('touch', { dir: 'left', val: true })"
       @touchend.prevent="$emit('touch', { dir: 'left', val: false })"
+      class="px-4 py-1 bg-background/40 border rounded-xl min-h-[44px]"
     >
       ◀
     </button>
@@ -27,6 +31,7 @@ defineEmits<{
     <button
       @touchstart.prevent="$emit('touch', { dir: 'jump', val: true })"
       @touchend.prevent="$emit('touch', { dir: 'jump', val: false })"
+      class="px-4 py-1 bg-background/40 border rounded-xl min-h-[44px]"
     >
       ⤴
     </button>
@@ -34,35 +39,9 @@ defineEmits<{
     <button
       @touchstart.prevent="$emit('touch', { dir: 'right', val: true })"
       @touchend.prevent="$emit('touch', { dir: 'right', val: false })"
+      class="px-4 py-1 bg-background/40 border rounded-xl min-h-[44px]"
     >
       ▶
     </button>
   </div>
 </template>
-
-<style scoped>
-.touch-controls {
-  position: absolute;
-  bottom: env(safe-area-inset-bottom, 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(100%, 440px);
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  padding: 0 14px;
-  z-index: 6;
-  pointer-events: auto;
-}
-
-.touch-controls button {
-  font-size: 1.2rem;
-  padding: 0.55rem 0;
-  background: rgba(15, 23, 42, 0.9);
-  border-radius: 12px;
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(6px);
-  min-height: 44px;
-}
-</style>

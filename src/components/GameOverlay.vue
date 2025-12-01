@@ -4,7 +4,7 @@ interface LeaderboardEntry {
   ts: number
 }
 
-type Anecdote = string
+type Secret = string
 
 interface Props {
   state: 'boot' | 'intro' | 'play' | 'end'
@@ -12,10 +12,8 @@ interface Props {
   bestScore: number
   bossDefeated: boolean
   selectedDuration: number
-  anecdotes: Anecdote[]
+  secrets: Secret[]
   leaderboard: LeaderboardEntry[]
-  shareText: string
-  shareCopied: boolean
   won: boolean
 }
 
@@ -24,35 +22,58 @@ defineProps<Props>()
 defineEmits<{
   start: []
   'set-duration': [duration: number]
-  'copy-share': []
 }>()
 </script>
 
 <template>
-  <div v-if="state === 'intro' || state === 'end'" class="overlay">
-    <div class="overlay-card">
-      <h1 v-if="state === 'intro'">twini Xmas</h1>
-      <h1 v-else>{{ won ? 'Noël sauvé ✨' : 'Noël en danger 😈' }}</h1>
+  <div
+    v-if="state === 'intro' || state === 'end'"
+    class="fixed inset-0 z-20 flex items-center justify-center p-6 bg-radial from-background/90 to-background/98"
+  >
+    <div
+      class="max-w-[520px] max-h-[90svh] space-y-4 px-8 py-12 bg-background/98 border rounded-3xl shadow-[0_20px_50px_rgba(0,_0,_0,_0.7)] overflow-y-auto"
+    >
+      <h1 v-if="state === 'intro'" class="text-2xl">twini Xmas</h1>
+      <h1 v-else class="text-2xl">
+        {{ won ? 'Oh oh oh... 🎅' : 'Oops... 😈' }}
+      </h1>
 
-      <p class="subtitle" v-if="state === 'intro'">
-        Récupérez un max de cadeaux, évitez les gremlins et stompez Krampus avant la fin du chrono.
-      </p>
-      <p class="subtitle" v-else>
-        Score : <strong>{{ score }}</strong> cadeaux — Best : <strong>{{ bestScore }}</strong>
-        <span v-if="bossDefeated"> (Krampus vaincu 💀)</span>
-      </p>
+      <div v-if="state === 'intro'" class="opacity-80 space-y-4">
+        <p>
+          Collectez un maximum de cadeaux 🎁, évitez les gremlins 😈 et terrassez Krampus 💀 avant
+          la fin du chrono !
+        </p>
+        <p class="font-semibold">
+          Plus vous collectez de cadeaux, plus vous débloquez de secrets de l'agence twini. (jusqu'à
+          6 au total 🤯)
+        </p>
+      </div>
 
-      <div v-if="state === 'intro'" class="modes">
-        <p class="modes-label">Mode de jeu :</p>
-        <div class="modes-buttons">
+      <div v-else class="opacity-80 space-y-4">
+        <p class="mb-4">
+          Score : <strong>{{ score }}</strong> 🎁 - Meilleur score :
+          <strong>{{ bestScore }}</strong> 🎁
+          <span v-if="bossDefeated"> • Krampus vaincu 💀</span>
+        </p>
+      </div>
+
+      <div v-if="state === 'intro'" class="space-y-4">
+        <p class="text-muted">Mode de jeu :</p>
+        <div class="flex flex-wrap gap-4">
           <button
-            :class="['mode-btn', selectedDuration === 45 ? 'mode-btn--active' : '']"
+            :class="[
+              'flex-1 py-1 px-2 border rounded-full cursor-pointer',
+              selectedDuration === 45 ? 'bg-accent' : 'bg-transparent',
+            ]"
             @click="$emit('set-duration', 45)"
           >
             Classique · 45s
           </button>
           <button
-            :class="['mode-btn', selectedDuration === 60 ? 'mode-btn--active' : '']"
+            :class="[
+              'flex-1 py-1 px-2 border rounded-full cursor-pointer',
+              selectedDuration === 60 ? 'bg-accent' : 'bg-transparent',
+            ]"
             @click="$emit('set-duration', 60)"
           >
             Score Attack · 60s
@@ -60,172 +81,73 @@ defineEmits<{
         </div>
       </div>
 
-      <p class="controls">
-        Clavier : ← → pour bouger, ↑ ou Espace pour sauter. Mobile : boutons en bas de l’écran.
-      </p>
+      <div
+        v-if="secrets.length"
+        class="p-4 space-y-6 border border-emerald-500/30 bg-emerald-900/20 rounded-xl"
+      >
+        <h3
+          class="text-sm font-semibold tracking-wide uppercase text-emerald-200 flex items-center gap-2"
+        >
+          <span class="h-px flex-1 bg-emerald-500/40"></span>
+          <span
+            >{{ secrets.length }} secret{{ secrets.length > 1 ? 's' : '' }} de l'agence débloqué{{
+              secrets.length > 1 ? 's' : ''
+            }}</span
+          >
+          <span class="h-px flex-1 bg-emerald-500/40"></span>
+        </h3>
 
-      <div v-if="anecdotes.length" class="anecdotes-block">
-        <h3>🎁 Anecdotes débloquées</h3>
-        <ul class="anecdote-list">
-          <li v-for="(a, i) in anecdotes" :key="i">
-            {{ a }}
+        <ul class="space-y-4">
+          <li v-for="(s, i) in secrets" :key="i" class="text-sm">
+            <span
+              class="block space-y-1 px-4 py-2 rounded-xl bg-emerald-900/60 border border-emerald-500/50 shadow-[0_0_12px_rgba(16,185,129,0.35)]"
+            >
+              <span class="block text-xs uppercase tracking-widest text-emerald-300/80">
+                Secret {{ i + 1 }}
+              </span>
+              <span class="block text-emerald-50">
+                {{ s }}
+              </span>
+            </span>
           </li>
         </ul>
       </div>
 
-      <div v-if="leaderboard.length" class="leaderboard-block">
-        <h3>🏅 Top scores</h3>
-        <ol>
-          <li v-for="(e, i) in leaderboard" :key="e.ts">
-            <span class="rank">#{{ i + 1 }}</span>
-            <span class="score">{{ e.score }} cadeaux</span>
+      <div
+        v-if="state === 'end' && !secrets.length"
+        class="p-4 space-y-4 border bg-background/60 rounded-xl"
+      >
+        <h3>😪 Secrets non débloqués</h3>
+        <p>
+          Collectez plus de cadeaux pour révéler des secrets exclusifs de l'agence twini à la
+          prochaine partie !
+        </p>
+      </div>
+
+      <p class="my-6 text-sm text-muted">
+        Clavier : ← → pour bouger, ↑ ou Espace pour sauter.<br />
+        Mobile : boutons en bas de l'écran.
+      </p>
+
+      <div v-if="leaderboard.length" class="p-4 space-y-4 border bg-background/60 rounded-xl">
+        <h3>🏅 Vos meilleurs scores</h3>
+
+        <ol class="text-sm">
+          <li v-for="(e, i) in leaderboard" :key="e.ts" class="flex items-center gap-2">
+            <span class="text-muted">#{{ i + 1 }} -</span>
+            <span>{{ e.score }} 🎁</span>
           </li>
         </ol>
       </div>
 
-      <div class="share-block">
-        <p class="share-label">Phrase à partager :</p>
-        <div class="share-box">
-          <span class="share-text">{{ shareText }}</span>
-        </div>
-        <button class="secondary-btn" @click="$emit('copy-share')">Copier</button>
-        <span v-if="shareCopied" class="share-confirm">Copié ✅</span>
+      <div class="mt-12 text-center">
+        <button
+          class="inline-flex py-2 px-4 text-center uppercase rounded-full bg-[linear-gradient(135deg,#6366f1,#ec4899)] text-[#f9fafb] shadow-[0_16px_32px_rgba(79,70,229,0.7)] cursor-pointer transition-all hover:-translate-y-1"
+          @click="$emit('start')"
+        >
+          {{ state === 'intro' ? 'Lancer la partie' : 'Relancer une partie' }} 🎅
+        </button>
       </div>
-
-      <button class="primary-btn" @click="$emit('start')">
-        {{ state === 'intro' ? 'Lancer la partie' : 'Rejouer' }}
-      </button>
     </div>
   </div>
 </template>
-
-<style scoped>
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.98));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 20;
-  padding: 1rem;
-}
-
-.overlay-card {
-  padding: 1.6rem 2rem;
-  border-radius: 1.4rem;
-  background: rgba(15, 23, 42, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  box-shadow:
-    0 20px 50px rgba(0, 0, 0, 0.95),
-    0 0 0 1px rgba(15, 23, 42, 1);
-  max-width: 520px;
-  max-height: 90svh;
-  overflow-y: auto;
-  text-align: center;
-}
-
-.overlay-card h1 {
-  font-size: 1.6rem;
-  margin-bottom: 0.4rem;
-}
-
-.subtitle {
-  font-size: 0.9rem;
-  opacity: 0.9;
-  margin-bottom: 0.9rem;
-}
-
-.controls {
-  font-size: 0.8rem;
-  opacity: 0.8;
-  margin-bottom: 0.9rem;
-}
-
-.modes {
-  margin-bottom: 0.9rem;
-  text-align: left;
-}
-
-.modes-label {
-  font-size: 0.8rem;
-  opacity: 0.9;
-  margin-bottom: 0.3rem;
-}
-
-.modes-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.mode-btn {
-  flex: 1 1 0;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  background: transparent;
-  color: #e5e7eb;
-  font-size: 0.8rem;
-  padding: 0.35rem 0.6rem;
-  cursor: pointer;
-}
-
-.mode-btn--active {
-  background: rgba(96, 165, 250, 0.2);
-  border-color: rgba(96, 165, 250, 0.9);
-}
-
-.anecdotes-block,
-.leaderboard-block {
-  margin-bottom: 0.9rem;
-  text-align: left;
-  font-size: 0.85rem;
-  background: rgba(15, 23, 42, 0.6);
-  padding: 0.8rem 1rem;
-  border-radius: 0.9rem;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-}
-
-.share-block {
-  margin-bottom: 1rem;
-  text-align: left;
-  font-size: 0.8rem;
-}
-
-.share-box {
-  border-radius: 0.9rem;
-  border: 1px dashed rgba(148, 163, 184, 0.9);
-  padding: 0.5rem 0.7rem;
-  background: rgba(15, 23, 42, 0.95);
-  margin-bottom: 0.4rem;
-}
-
-.share-confirm {
-  margin-left: 0.4rem;
-  font-size: 0.75rem;
-  color: #4ade80;
-}
-
-.primary-btn,
-.secondary-btn {
-  border-radius: 999px;
-  padding: 0.55rem 1.4rem;
-  font-size: 0.85rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  border: none;
-  cursor: pointer;
-}
-
-.primary-btn {
-  background: linear-gradient(135deg, #6366f1, #ec4899);
-  color: #f9fafb;
-  box-shadow: 0 16px 32px rgba(79, 70, 229, 0.7);
-}
-
-.secondary-btn {
-  background: transparent;
-  color: #e5e7eb;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-}
-</style>

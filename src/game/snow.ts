@@ -1,4 +1,4 @@
-import { LOGIC_WIDTH, LOGIC_HEIGHT } from './constants.ts'
+import { LOGIC_WIDTH, LOGIC_HEIGHT } from './constants'
 
 export interface Snowflake {
   x: number

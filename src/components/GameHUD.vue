@@ -15,58 +15,24 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="hud hud-top">
-    <div class="hud-pill">twini Xmas</div>
-    <div class="hud-info">
-      <span>⏱ {{ timeLeft }}s</span>
-      <span>🎁 {{ score }}</span>
-      <span>🏆 {{ bestScore }}</span>
-      <span v-if="bossDefeated">💀 Krampus</span>
-
-      <button class="mute-btn" @click="$emit('toggle-mute')">
-        {{ muted ? '🔇' : '🔊' }}
-      </button>
+  <div
+    class="absolute top-4 inset-x-4 z-5 flex items-center justify-between gap-4 w-[calc(100%---spacing(8))] text-sm sm:text-base"
+  >
+    <div class="flex items-center gap-4">
+      <span class="py-1 px-2 bg-background/90 border rounded-full">twini Xmas</span>
+      <div class="flex items-center gap-2 sm:gap-4 py-1 px-2 bg-background/90 rounded-full">
+        <span>⏱ {{ timeLeft }}s</span>
+        <span>🎁 {{ score }}</span>
+        <span>🏆 {{ bestScore }}</span>
+        <span v-if="bossDefeated">💀 Krampus</span>
+      </div>
     </div>
+
+    <button
+      class="size-7 bg-background/90 border rounded-full cursor-pointer sm:size-8"
+      @click="$emit('toggle-mute')"
+    >
+      {{ muted ? '🔇' : '🔊' }}
+    </button>
   </div>
 </template>
-
-<style scoped>
-.hud {
-  position: absolute;
-  z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.85rem;
-}
-
-.hud-top {
-  top: 10px;
-  left: 14px;
-}
-
-.hud-pill {
-  padding: 0.25rem 0.7rem;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  font-size: 0.75rem;
-  letter-spacing: 0.13em;
-}
-
-.hud-info {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.mute-btn {
-  padding: 0.2rem 0.6rem;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  background: rgba(15, 23, 42, 0.9);
-  color: #e5e7eb;
-  font-size: 0.75rem;
-  cursor: pointer;
-}
-</style>
